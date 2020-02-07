@@ -7,4 +7,4 @@ console.log('haha')
 
 **This is my first mk flie**
 
-*I should do more practice!*
+*I should do more practices!*
