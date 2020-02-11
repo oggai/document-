@@ -335,3 +335,504 @@ foo.call( obj ); // 2
 **ES6 中的箭头函数并不会使用四条标准的绑定规则，而是根据当前的词法作用域来决定this，具体来说，箭头函数会继承外层函数调用的 this 绑定（无论 this 绑定到什么）。这其实和 ES6 之前代码中的 self = this 机制一样。**
 
 ### 对象
+
+两种定义形式：文字形式和构造形式。
+
+```javascript
+var myObj = {  // 文字形式
+  key: value
+// ...
+};
+```
+
+```javascript
+var myObj = new Object();  // 构造形式
+myObj.key = value;  // 只能逐个添加属性
+```
+
+对象的简单基本类型：
+* string
+* number
+* boolean
+* null
+* undefined
+* object
+
+对象的复杂基本类型（子类型）：
+* String
+* Number
+* Boolean
+* Object
+* Function
+* Array
+* Date
+* RegExp
+* Error
+
+*在 JavaScript 中，它们实际上只是一些内置函数（首字母大写）。这些内置函数可以当作构造函数（由 new 产生的函数调用）来使用，从而可以构造一个对应子类型的新对象。*  
+*在必要时语言会自动把字符串字面量转换成一个 String 对象，也就是说你并不需要显式创建一个对象。数字同理。*
+
+对象的内容：
+>对象的内容是由一些存储在特定命名位置的（任意类型的）值组成的，我们称之为属性。  
+>在引擎内部，这些值的存储方式是多种多样的，一般并不会存在对象容器内部。存储在对象容器内部的是这些属性的名称，它们就像指针（从技术角度来说就是引用）一样，指向这些值真正的存储位置。
+
+对象的访问
+对象的访问用 . 操作符或者 [] 操作符。.a 语法通常被称为“属性访问”，["a"] 语法通常被称为“键访问”。[".."] 语法可以接受任意 UTF-8/Unicode 字符串作为属性名。
+
+属性与方法的区别
+
+*在其他语言中，属于对象（也被称为“类”）的函数通常被称为“方法”。*  
+
+在JavaScript中，无论对象属性返回值是什么类型，每次访问对象的属性就是属性访问。如果属性访问返回的是一个函数，那它也并不是一个“方法”。属性访问返回的函数和其他函数没有任何区别（除了可能发生的隐式绑定 this）。
+
+有些函数具有 this 引用，有时候这些 this 确实会指向调用位置的对象引用。但是这种用法从本质上来说并没有把一个函数变成一个“方法”，因为 this 是在运行时根据调用位置动态绑定的，所以函数和对象的关系最多也只能说是间接关系。
+
+```javascript
+function foo() {
+  console.log( "foo" );
+}
+
+var someFoo = foo; // 对 foo 的变量引用
+
+var myObject = {
+  someFoo: foo
+};
+
+foo; // function foo(){..}
+someFoo; // function foo(){..}
+myObject.someFoo; // function foo(){..}
+```
+someFoo 和 myObject.someFoo 只是对于同一个函数的不同引用，并不能说明这个函数是特别的或者“属于”某个对象。  
+即使你在对象的文字形式中声明一个函数表达式，这个函数也不会“属于”这个对象——它们只是对于相同函数对象的多个引用。
+
+数组与对象
+
+数组也是对象，所以虽然每个下标都是整数，你仍然可以给数组添加属性：
+```javascript
+var myArray = [ "foo", 42, "bar" ];
+
+myArray.baz = "baz";
+myArray.length; // 3
+myArray.baz; // "baz"
+```
+可以看到虽然添加了命名属性（无论是通过 . 语法还是 [] 语法），数组的 length 值并未发生变化。
+
+如果你试图向数组添加一个属性，但是属性名“看起来”像一个数字，那它会变成一个数值下标（因此会修改数组的内容而不是添加一个属性）：
+```javascript
+var myArray = [ "foo", 42, "bar" ];
+
+myArray["3"] = "baz";
+myArray.length; // 4
+myArray[3]; // "baz"
+```
+
+对象的复制
+
+浅复制和~~深复制~~：
+>浅复制是指只拷贝值，对于函数、数组等只是引用。  
+>深复制不提。
+
+以 ES6 定义了 Object.assign(..) 方法来实现浅复制。  
+Object.assign(..) 方法的第一个参数是目标对象，之后还可以跟一个或多个源对象。  
+它会遍历一个或多个源对象的所有可枚举（enumerable，参见下面的代码）的自有键（owned key，很快会介绍）并把它们复制（使用 = 操作符赋值，即引用）到目标对象，最后返回目标对象。
+
+属性描述符(也称数据描述符)
+
+```javascript
+var myObject = {
+  a:2
+};
+Object.getOwnPropertyDescriptor( myObject, "a" );
+// {
+// value: 2,
+// writable: true,
+// enumerable: true,
+// configurable: true
+// }
+```
+
+这个普通的对象属性对应的属性描述符可不仅仅只是一个 2。它还包含另外三个特性：writable（可写）、enumerable（可枚举）和 configurable（可配置）。
+
+在创建普通属性时属性描述符会使用默认值，我们也可以使用 Object.defineProperty(..)来添加一个新属性或者修改一个已有属性（如果它是 configurable）并对特性进行设置。
+
+```javascript
+var myObject = {};
+Object.defineProperty( myObject, "a", {
+    value: 2,
+    writable: true,
+    configurable: true,
+    enumerable: true
+} );
+myObject.a; // 2
+```
+
+1. writable  
+   决定是否可以修改属性的值。*可以把 writable:false 看作是属性不可改变，相当于你定义了一个空操作 setter。*
+
+2. Configurable  
+   只要属性是可配置的，就可以使用 defineProperty(..) 方法来修改   属性描述符。  
+   
+   **configurable修改成false是单向操作，无法撤销！**  
+   
+   **即便属性是 configurable:false，我们还是可以修改属性的值，可以把 writable 的状态由 true 改为 false，但是无法由 false 改为 true。**  
+   
+   除了无法修改，configurable:false 还会**禁止删除**这个属性。
+
+3. Enumerable  
+   这个描述符控制的是属性是否会出现在对象的属性枚举中，比如说for..in 循环。
+
+对象/属性的不变性
+
+很重要的一点是，**所有的方法创建的都是浅不变形**，也就是说，它们只会影响目标对象和它的直接属性。如果目标对象引用了其他对象（数组、对象、函数，等），其他对象的内容不受影响，仍然是可变的。
+
+1. 对象常量  
+结合 writable:false 和 configurable:false 就可以创建一个真正的常量属性（不可修改、
+重定义或者删除）
+
+2. 禁止扩展  
+如果你想禁止一个对象添加新属性并且保留已有属性，可以使用Object.preventExtensions(..)
+
+3. 密封  
+Object.seal(..) 会创建一个“密封”的对象，这个方法实际上会在一个现有对象上调用Object.preventExtensions(..) 并把所有现有属性标记为 configurable:false。所以，密封之后**不仅不能添加新属性，也不能重新配置或者删除任何现有属性**（虽然可以修改属性的值）。
+
+4. 冻结  
+Object.freeze(..) 会创建一个冻结对象，这个方法实际上会在一个现有对象上调用Object.seal(..) 并把所有“数据访问”属性标记为 writable:false，这样就**无法修改它们的值**。
+
+[[Get]]
+
+```javascript
+var myObject = {
+  a: 2
+};
+
+myObject.a; // 2
+```
+
+myObject.a 在 myObject 上实际上是实现了 [[Get]] 操作（有点像函数调用：[[Get]]()）。对象默认的内置 [[Get]] 操作首先在对象中查找是否有名称相同的属性，如果找到就会返回这个属性的值。然而，如果没有找到名称相同的属性，按照 [[Get]] 算法的定义会执行另外一种非常重要的行为(遍历[[Prototype]]原型链)。
+
+[[Put]]
+
+[[Put]] 被触发时，实际的行为取决于许多因素，包括对象中是否已经存在这个属性（这是最重要的因素）。  
+如果已经存在这个属性，[[Put]] 算法大致会检查下面这些内容。
+1. 属性是否是访问描述符？如果是并且存在setter 就调用 setter。
+2. 属性的数据描述符中 writable 是否是 false ？如果是，在非严格模式下静默失败，在严格模式下抛出 TypeError 异常。
+3. 如果都不是，将该值设置为属性的值。
+
+如果对象中不存在这个属性，[[Put]] 操作会更加复杂。
+
+Getter和Setter
+> ES5 中可以使用 getter 和 setter 部分改写默认操作，但是只能应用在单个属性上，无法应用在整个对象上。  
+> getter 是一个隐藏函数，会在获取属性值时调用。setter 也是一个隐藏函数，会在设置属性值时调用。
+
+*属性不一定包含值——它们可能是具备 getter/setter 的“访问描述符”。*
+
+当你给一个属性定义 getter、setter 或者两者都有时，这个属性会被定义为“访问描述符”（和“数据描述符”相对）。
+
+```javascript
+var myObject = {
+  // 给 a 定义一个 getter
+  get a() {
+  return 2;
+}
+};
+Object.defineProperty(
+  myObject, // 目标对象 
+  "b", // 属性名
+  { // 访问描述符
+    // 给 b 设置一个 getter
+    get: function(){ 
+      return this.a * 2 
+    },
+    // 确保 b 会出现在对象的属性列表中
+    enumerable: true
+  }
+);
+
+myObject.a; // 2  这是对属性a的访问，会调用getter
+myObject.b; // 4
+```
+
+不管是对象文字语法中的 get a() { .. }，还是 defineProperty(..) 中的显式定义，二者都会在对象中创建一个不包含值的属性，对于这个属性的访问会自动调用一个隐藏函数，它的返回值会被当作属性访问的返回值。
+
+```javascript
+var myObject = {
+// 给 a 定义一个 getter
+  get a() {
+    return this._a_;
+  },
+//给 a 定义一个 setter
+  set a(val) {
+    this._a_ = val * 2;
+  }
+};
+
+myObject.a = 2; // setter
+myObject.a; // 4   getter
+```
+实际上我们把赋值（[[Put]]）操作中的值 2 存储到了另一个变量_a_ 中。
+
+属性的存在性
+
+```javascript
+var myObject = {
+  a:2
+};
+
+("a" in myObject); // true
+("b" in myObject); // false
+
+myObject.hasOwnProperty( "a" ); // true
+myObject.hasOwnProperty( "b" ); // false
+```
+
+in 操作符会检查属性是否在对象及其 [[Prototype]] 原型链中。  
+hasOwnProperty(..) 只会检查属性是否在 myObject 对象中，不会检查 [[Prototype]] 链。
+
+in 操作符可以检查容器内是否有某个值，但是它实际上检查的是某
+个**属性名是否存在**。对于数组来说这个区别非常重要，4 in [2, 4, 6] 的结果并不是你期待的 True，因为 [2, 4, 6] 这个数组中包含的属性名是 0、1、2，没有 4。
+
+也可以通过另一种方式来区分属性是否可枚举：
+```javascript
+var myObject = { };
+
+Object.defineProperty(
+  myObject,
+  "a",
+  // 让 a 像普通属性一样可以枚举
+  { enumerable: true, value: 2 }
+);
+
+Object.defineProperty(
+  myObject,
+  "b",
+  // 让 b 不可枚举
+  { enumerable: false, value: 3 }
+);
+
+myObject.propertyIsEnumerable( "a" ); // true
+myObject.propertyIsEnumerable( "b" ); // false
+
+Object.keys( myObject ); // ["a"]
+Object.getOwnPropertyNames( myObject ); // ["a", "b"]
+```
+
+propertyIsEnumerable(..) 会检查给定的属性名**是否直接存在于对象中**（而不是在原型链上）并且满足 enumerable:true。  
+
+Object.keys(..) 会返回一个数组，包含所有可枚举属性。  
+Object.getOwnPropertyNames(..)会返回一个数组，包含所有属性，无论它们是否可枚举。
+
+Object.keys(..)和 Object.getOwnPropertyNames(..) 都只会查找**对象直接包含的属性**。
+
+对象的遍历
+
+for..in 循环可以用来遍历对象的可枚举属性列表（包括 [[Prototype]] 链）。但是如何遍历属性的值呢？
+```javascript
+var myArray = [1, 2, 3];
+for (var i = 0; i < myArray.length; i++) {
+  console.log( myArray[i] );
+}
+// 1 2 3
+```
+这实际上并不是在遍历值，而是遍历下标来指向值，如 myArray[i]。  
+那么如何直接遍历值而不是数组下标（或者对象属性）呢？幸好，ES6 增加了一种用来遍历数组的 for..of 循环语法（如果对象本身定义了迭代器的话也可以遍历对象）:
+
+```javascript
+var myArray = [ 1, 2, 3 ];
+for (var v of myArray) {
+console.log( v );
+}
+// 1
+// 2
+// 3
+```
+
+```javascript
+var myObject = {
+  a: 2,
+  b: 3
+};
+// 用 for..of 遍历 myObject
+for (var v of myObject) {
+  console.log( v );
+}
+// 2
+// 3
+```
+
+### 混合对象“类”
+
+>在继承或者实例化时，JavaScript 的对象机制并不会自动执行复制行为。简单来说，JavaScript 中只有对象，并不存在可以被实例化的“类”。一个对象并不会被复制到其他对象，它们会被关联起来。 
+> 
+>由于在其他语言中类表现出来的都是**复制行为**，因此 JavaScript 开发者也想出了一个方法来**模拟类的复制行为**，这个方法就是混入。接下来我们会看到两种类型的混入：显式和隐式。
+
+显示混入
+
+* 显示混入mixin()
+
+  ```javascript
+  // 非常简单的 mixin(..) 例子 :
+  function mixin( sourceObj, targetObj ) {
+    for (var key in sourceObj) {
+    // 只会在不存在的情况下复制
+      if (!(key in targetObj)) {
+        targetObj[key] = sourceObj[key];
+      }
+    }
+    return targetObj;
+  }
+  
+  var Vehicle = {
+    engines: 1,
+    
+    ignition: function() {
+      console.log( "Turning on my engine." );
+    },
+    
+    drive: function() {
+      this.ignition();
+      console.log( "Steering and moving forward!" );
+    }
+  };
+  
+  var Car = mixin( Vehicle, {
+    wheels: 4,
+    
+    drive: function() {
+      Vehicle.drive.call( this );  // 显示多态
+                                   // 在面向类的语言中，   inherited:drive()，我们称   之为相对多态
+      console.log(
+        "Rolling on all " + this.wheels + " wheels!"
+      );
+    }
+  } );
+  ```
+
+  JavaScript（在 ES6 之前）并没有相对多态的机制。所以，由于   Car 和Vehicle 中都有 drive() 函数，为了指明调用对象，我们必须  使用绝对（而不是相对）引用。我们通过**名称显式指定**Vehicle 对  象并调用它的 drive() 函数。
+  
+  如果你向目标对象中显式混入超过一个对象，就可以部分模仿多重继承  行为，但是仍没有直接的方式来处理函数和属性的同名问题。
+  
+  但是在 JavaScript 中（由于屏蔽）使用显式伪多态会在所有需要使用  （伪）多态引用的地方创建一个函数关联，这会极大地增加维护成本。  此外，由于显式伪多态可以模拟多重继承，所以它会进一步增加代码的  复杂度和维护难度。
+
+* 混合复制
+
+  ```javascript
+  // 另一种混入函数，可能有重写风险
+  function mixin( sourceObj, targetObj ) {
+    for (var key in sourceObj) {
+      targetObj[key] = sourceObj[key];
+    }
+    return targetObj;
+  }
+  
+  var Vehicle = {
+  // ...
+  };
+  
+  // 首先创建一个空对象并把 Vehicle 的内容复制进去
+  var Car = mixin( Vehicle, { } );
+  // 然后把新内容复制到 Car 中
+  mixin( {
+  wheels: 4,
+  drive: function() {
+  // ...
+  }
+  }, Car );
+  ```
+  
+  这里我们是先进行复制然后对 Car 进行特殊化的话，就可以跳过存在性  检查。不过这种方法并不好用并且效率更低，所以不如第一种方法常  用。
+
+* 寄生继承
+
+  ```javascript
+  //“传统的 JavaScript 类”Vehicle
+  function Vehicle() {
+    this.engines = 1;
+  }
+  
+  Vehicle.prototype.ignition = function() {
+    console.log( "Turning on my engine." );
+  };
+  
+  Vehicle.prototype.drive = function() {
+    this.ignition();
+    console.log( "Steering and moving forward!" );
+  };
+  
+  //“寄生类”Car
+  function Car() {
+    // 首先，car 是一个 Vehicle
+    var car = new Vehicle();
+    // 接着我们对 car 进行定制
+    car.wheels = 4;
+    // 保存到 Vehicle::drive() 的特殊引用
+    var vehDrive = car.drive;
+    // 重写 Vehicle::drive()
+    car.drive = function() {
+      vehDrive.call( this );
+      console.log(
+        "Rolling on all " + this.wheels + " wheels!"
+      );
+    
+    return car;
+  }
+  
+  var myCar = new Car();
+  // 调用 new Car() 时会创建一个新对象并绑定到 Car 的 this   上。  
+  // 但是因为我们没有使用这个对象而是返回了我们自己的 car 对象，  所以最初被创建的这个对象会被丢弃，因此可以不使用 new 关键字调  用 Car()。
+  // 这样做得到的结果是一样的，但是可以避免创建并丢弃多余的对象。
+  
+  myCar.drive();
+  // 发动引擎。
+  // 手握方向盘！
+  // 全速前进！
+  ```
+
+隐式混入
+
+```javascript
+var Something = {
+  cool: function() {
+    this.greeting = "Hello World";
+    this.count = this.count ? this.count + 1 : 1;
+  }
+};
+
+Something.cool();
+Something.greeting; // "Hello World"
+Something.count; // 1
+
+var Another = {
+  cool: function() {
+  // 隐式把 Something 混入 Another
+    Something.cool.call( this );
+  // 显示混入不同的地方是用了mixin函数进行复制操作，但也调用了源对象。
+  }
+};
+
+Another.cool();
+Another.greeting; // "Hello World"
+Another.count; // 1（count 不是共享状态）
+```
+
+通过在构造函数调用或者方法调用中使用 Something.cool.call( this )，我们实际上“借用”了函数 Something.cool() 并在 Another 的上下文中调用了它（通过 this 绑定）。最终的结果是 Something.cool() 中的赋值操作都会应用在 Another 对象上而不是Something 对象上。  
+因此，我们把 Something 的行为“混入”到了 Another 中。
+
+### 原型
+
+再谈[[Put]]
+
+`myObject.foo = "bar";`
+
+如果**myObject 已经存在属性foo**，[[Put]] 算法大致会检查下面这些内容。
+1. 属性是否是访问描述符？如果是并且存在setter 就调用 setter。
+2. 属性的数据描述符中 writable 是否是 false ？如果是，在非严格模式下静默失败，在严格模式下抛出 TypeError 异常。
+3. 如果都不是，将该值设置为属性的值。
+
+如果**foo不是直接存在于 myObject** 中，[[Prototype]] 链就会被遍历，类似 [[Get]] 操作。如果原型链上找不到 foo，foo 就会被直接添加到 myObject 上。
+
+如果**foo 不直接存在于 myObject 中而是存在于原型链上层时**, myObject.foo = "bar" 会出现的三种情况。
+1. 如果在 [[Prototype]] 链上层存在名为 foo 的普通数据访问属性并且可写（writable:true），那就会直接在 myObject 中添加一个名为 foo 的新属性，它是屏蔽属性。
+2. 如果在 [[Prototype]] 链上层存在 foo，但是它被标记为只读（writable:false），那么无法修改已有属性或者在 myObject 上创建屏蔽属性。如果运行在严格模式下，代码会抛出一个错误。否则，这条赋值语句会被忽略。总之，不会发生屏蔽。
+3. 如果在 [[Prototype]] 链上层存在 foo 并且它是一个 setter，那就一定会调用这个 setter。foo 不会被添加到（或者说屏蔽于）myObject，也不会重新定义 foo 这个 setter。
+
+161
