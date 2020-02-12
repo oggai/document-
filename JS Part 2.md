@@ -835,4 +835,394 @@ Another.count; // 1（count 不是共享状态）
 2. 如果在 [[Prototype]] 链上层存在 foo，但是它被标记为只读（writable:false），那么无法修改已有属性或者在 myObject 上创建屏蔽属性。如果运行在严格模式下，代码会抛出一个错误。否则，这条赋值语句会被忽略。总之，不会发生屏蔽。
 3. 如果在 [[Prototype]] 链上层存在 foo 并且它是一个 setter，那就一定会调用这个 setter。foo 不会被添加到（或者说屏蔽于）myObject，也不会重新定义 foo 这个 setter。
 
-161
+[[Prototype]]
+
+```javascript
+function Foo() {
+// ...
+}
+Foo.prototype; // { }
+```
+
+所有的函数默认都会拥有一个名为 prototype 的公有并且不可枚举的属性，它会指向另一个对象。这个对象通常被称为**Foo 的原型**，因为我们通过名为Foo.prototype 的属性引用来访问它。
+
+这个对象是在调用 new Foo()（参见第 2 章）时创建的，最后会被（有点武断地）关联到这个“Foo 点 prototype”对象上。
+我们来验证一下：
+```javascript
+function Foo() {
+// ...
+}
+
+var a = new Foo();
+
+Object.getPrototypeOf( a ) === Foo.prototype; // true
+```
+
+调用 new Foo() 时会创建 a，其中的一步就是给 a 一个**内部的 [[Prototype]] 链接**，关联到 Foo.prototype 指向的那个对象。
+
+
+下面这段代码使用的就是典型的“原型风格”：
+
+```javascript
+function Foo(name) {
+  this.name = name;
+}
+
+Foo.prototype.myName = function() {
+  return this.name;
+};
+
+function Bar(name,label) {  // 声明 function Bar() { .. } 时，和其他函数一样，Bar 会有一个 .prototype 关联到默认的对象，
+                            // 但是这个对象并不是我们想要的 Foo.prototype。因此我们创建了一个新对象并把它关联到我们希望的对象上，直接把
+                            // 原始的关联对象抛弃掉。
+  Foo.call( this, name );
+  this.label = label;
+}
+// 我们创建了一个新的 Bar.prototype 对象并关联到 Foo.prototype
+Bar.prototype = Object.create( Foo.prototype );
+// 注意！现在没有 Bar.prototype.constructor 了
+// 如果你需要这个属性的话可能需要手动修复一下它
+Bar.prototype.myLabel = function() {
+  return this.label;
+};
+
+var a = new Bar( "a", "obj a" );
+
+a.myName(); // "a"
+a.myLabel(); // "obj a"
+```
+注意，下面这两种方式是常见的错误做法，实际上它们都存在一些问题：
+```javascript
+// 和你想要的机制不一样！
+Bar.prototype = Foo.prototype;
+// 基本上满足你的需求，但是可能会产生一些副作用 :(
+Bar.prototype = new Foo();
+```
+
+Bar.prototype = Foo.prototype 并不会创建一个关联到 Bar.prototype 的新对象，它只是让 Bar.prototype 直接引用 Foo.prototype 对象。
+
+Bar.prototype = new Foo() 的确会创建一个关联到 Bar.prototype 的新对象。但是它使用了 Foo(..) 的“构造函数调用”，如果函数 Foo 有一些副作用（比如写日志、修改状态、注册到其他对象、给 this 添加数据属性，等等）的话，就会影响到 Bar() 的“后代”，后果不堪设想。
+
+因此，要创建一个合适的关联对象，我们必须使用 Object.create(..) 而不是使用具有副作用的 Foo(..)。这样做唯一的缺点就是需要创建一个新对象然后把旧对象抛弃掉，不能直接修改已有的默认对象。
+
+ES6 添加了辅助函数 `Object.setPrototypeOf(..)`，可以用标准并且可靠的方法来修改关联。  
+我们来对比一下两种把 Bar.prototype 关联到 Foo.prototype 的方法：
+```javascript
+// ES6 之前需要抛弃默认的 Bar.prototype
+Bar.ptototype = Object.create( Foo.prototype );
+// ES6 开始可以直接修改现有的 Bar.prototype
+Object.setPrototypeOf( Bar.prototype, Foo.prototype );
+```
+
+如果忽略掉 Object.create(..) 方法带来的轻微性能损失（抛弃的对象需要进行垃圾回收），它实际上比 ES6 及其之后的方法更短而且可读性更高。
+
+检查“类”关系
+
+假设有对象 a，如何寻找对象 a 委托的对象（如果存在的话）呢？（这种行为被称为内省或者反射）
+
+第一种方法是站在“类”的角度来判断：
+
+    a instanceof Foo; // true
+
+instanceof 操作符的左操作数是一个普通的对象，右操作数是一个函数。instanceof 回答的问题是：在 a 的整条 [[Prototype]] 链中是否有指向 Foo.prototype 的对象？可惜，这个方法只能处理对象（a）和函数（带 .prototype 引用的 Foo）之间的关系。
+
+下面是第二种判断 [[Prototype]] 反射的方法，它更加简洁：  
+    Foo.prototype.isPrototypeOf( a ); // true
+
+注意，在本例中，我们实际上并不关心（甚至不需要）Foo，我们只需要任何一个可以用来判断的对象（本例中是 Foo.prototype）就行。isPrototypeOf(..) 回答的问题是：在 a 的整条 [[Prototype]] 链中是否出现过 Foo.prototype ？
+
+可以验证一下，这个对象引用是否和我们想的一样：  
+
+    Object.getPrototypeOf( a ) === Foo.prototype; // true
+
+绝大多数（不是所有！）浏览器也支持一种非标准的方法来访问内部 [[Prototype]] 属性：a.__proto__ === Foo.prototype; // true
+
+对象关联
+
+```javascript
+var foo = {
+  something: function() {
+    console.log( "Tell me something good..." );
+  }
+};
+
+var bar = Object.create( foo );
+
+bar.something(); // Tell me something good...
+```
+
+Object.create(..) 会创建一个新对象（bar）并把它关联到我们指定的对象（foo），这样我们就可以充分发挥 [[Prototype]] 机制的威力（委托）并且避免不必要的麻烦（比如使用 new 的构造函数调用会生成 .prototype 和 .constructor 引用）。
+
+**Object.create(null) 会 创 建 一 个 拥 有 空（ 或 者 说 null）[[Prototype]]链接的对象，这个对象无法进行委托。由于这个对象没有原型链，所以instanceof 操作符（之前解释过）无法进行判断，因此总是会返回 false。这些特殊的空 [[Prototype]] 对象通常被称作“字典”，它们完全不会受到原型链的干扰，因此非常适合用来**存储数据**。**
+
+Object.create()的polyfill代码
+
+
+Object.create(..) 是在 ES5 中新增的函数，所以在 ES5 之前的环境中（比如旧 IE）如果要支持这个功能的话就需要使用一段简单的 polyfill 代码，它部分实现了 Object.create(..) 的功能：
+```javascript
+if (!Object.create) {
+  Object.create = function(o) {
+    function F(){}
+    F.prototype = o;
+    return new F();
+  };
+}
+```
+
+这段 polyfill 代码使用了一个一次性函数 F，我们通过改写它的 .prototype 属性使其指向想要关联的对象，然后再使用 new F() 来构造一个新对象进行关联。
+
+当你给开发者设计软件时，假设要调用 myObject.cool()，如果 myObject 中不存在 cool()时这条语句也可以正常工作的话，那你的 API 设计就会变得很“神奇”，对于未来维护你软件的开发者来说这可能不太好理解。
+
+但是你可以让你的 API 设计不那么“神奇”，同时仍然能发挥 [[Prototype]] 关联的威力：
+```javascript
+var anotherObject = {
+  cool: function() {
+    console.log( "cool!" );
+  }
+};
+
+var myObject = Object.create( anotherObject );
+
+myObject.doCool = function() {
+  this.cool(); // 内部委托！
+};
+
+myObject.doCool(); // "cool!"
+```
+
+这里我们调用的 myObject.doCool() 是实际存在于 myObject 中的，这可以让我们的 API 设计更加清晰（不那么“神奇”）。
+
+### 行为委托
+
+类理论
+
+假设我们需要在软件中建模一些类似的任务（“XYZ”、“ABC”等）。如果使用类，那设计方法可能是这样的：定义一个通用父（基）类，可以将其命名为
+Task，在 Task 类中定义所有任务都有的行为。接着定义子类 XYZ 和 ABC，它们都继承自Task 并且会添加一些特殊的行为来处理对应的任务。
+
+```javascript
+下面是对应的伪代码：
+class Task {
+  id;
+  // 构造函数 Task()
+  Task(ID) { id = ID; }
+  outputTask() { output( id ); }
+}
+
+class XYZ inherits Task {
+  label;
+  // 构造函数 XYZ()
+  XYZ(ID,Label) { super( ID ); label = Label; }
+  outputTask() { super(); output( label ); }
+}
+
+class ABC inherits Task {
+  // ...
+}
+```
+
+委托理论
+
+首先你会定义一个名为 Task 的对象（和许多 JavaScript 开发者告诉你的不同，它既不是类也不是函数），它会包含所有任务都可以使用（写作使用，读作委托）的具体行为。接着，对于每个任务（“XYZ”、“ABC”）你都会定义一个对象来存储对应的数据和行为。你会把特定的任务对象都关联到 Task 功能对象上，让它们在需要的时候可以进行委托。
+
+基本上你可以想象成，执行任务“XYZ”需要两个兄弟对象（XYZ 和 Task）协作完成。但是我们并不需要把这些行为放在一起，通过类的复制，我们可以把它们分别放在各自独立的对象中，需要时可以允许 XYZ 对象委托给 Task。
+
+```javascript
+Task = {
+  setID: function(ID) { this.id = ID; },
+  outputID: function() { console.log( this.id ); }
+};
+// 让 XYZ 委托 Task
+XYZ = Object.create( Task );
+
+XYZ.prepareTask = function(ID,Label) {
+  this.setID( ID );
+  this.label = Label;
+};
+
+XYZ.outputTaskDetails = function() {
+  this.outputID();
+  console.log( this.label );
+};
+
+// ABC = Object.create( Task );
+// ABC ... = ...
+```
+
+相比于面向类（或者说面向对象），我会把这种编码风格称为“对象关联”（OLOO，objects linked to other objects）。
+
+对象关联风格的代码还有一些不同之处。
+1. 在上面的代码中，id 和 label 数据成员都是直接存储在 XYZ 上（而不是 Task）。通常来说，在 [[Prototype]] 委托中最好把状态保存在委托者（XYZ、ABC）而不是委托目标（Task）上。
+   
+2. 在类设计模式中，我们故意让父类（Task）和子类（XYZ）中都有 outputTask 方法，这样就可以利用重写（多态）的优势。在委托行为中则恰好相反：我们会尽量避免在[[Prototype]] 链的不同级别中使用相同的命名，否则就需要使用笨拙并且脆弱的语法来消除引用歧义。这个设计模式要求尽量少使用容易被重写的通用方法名，提倡使用更有描述性的方法名，尤其是要写清相应对象行为的类型。这样做实际上可以创建出更容易理解和维护的代码，因为方法名（不仅在定义的位置，而是贯穿整个代码）更加清晰（自文档）。
+
+3. this.setID(ID)；XYZ 中的方法首先会寻找 XYZ 自身是否有 setID(..)，但是 XYZ 中并没有这个方法名，因此会通过 [[Prototype]] 委托关联到 Task 继续寻找，这时就可以找到setID(..) 方法。此外，由于调用位置触发了 this 的隐式绑定规则，因此虽然 setID(..) 方法在 Task 中，运行时 this 仍然会绑定到 XYZ，这正是我们想要的。在之后的代码中我们还会看到 this.outputID()，原理相同。
+
+比较思维模型
+
+下面是典型的（“原型”）面向对象风格：
+
+```javascript
+function Foo(who) {
+  this.me = who;
+}
+
+Foo.prototype.identify = function() {
+  return "I am " + this.me;
+};
+
+function Bar(who) {
+  Foo.call( this, who );
+}
+
+Bar.prototype = Object.create( Foo.prototype );
+
+Bar.prototype.speak = function() {
+  alert( "Hello, " + this.identify() + "." );
+};
+
+var b1 = new Bar( "b1" );
+var b2 = new Bar( "b2" );
+
+b1.speak();
+b2.speak();
+```
+
+下面我们看看如何使用对象关联风格来编写功能完全相同的代码：
+
+```javascript
+Foo = {
+  init: function(who) {
+    this.me = who;
+  },
+  
+  identify: function() {
+    return "I am " + this.me;
+  }
+};
+
+Bar = Object.create( Foo );
+
+Bar.speak = function() {
+  alert( "Hello, " + this.identify() + "." );
+};
+
+var b1 = Object.create( Bar );
+b1.init( "b1" );
+var b2 = Object.create( Bar );
+b2.init( "b2" );
+
+b1.speak();
+b2.speak();
+```
+
+非常重要的一点是，这段代码简洁了许多，我们只是把对象关联起来，并不需要那些既复杂又令人困惑的模仿类的行为（构造函数、原型以及 new）。
+
+更好的语法
+
+ ES6中我们可以在任意对象的字面形式中使用简洁方法声明（concise method declaration），所以对象关联风格的对象可以这样声明（和 class 的语法糖一样）：
+
+```javascript
+ var LoginController = {
+  errors: [],
+  getUser() { // 妈妈再也不用担心代码里有 function 了！
+  // ...
+  },
+  getPassword() {
+  // ...
+  }
+  // ...
+};
+// 使用更好的对象字面形式语法和简洁方法
+var AuthController = {
+errors: [],  // 内部委托
+checkAuth() {
+// ...
+},
+server(url,data) {
+// ...
+}
+// ...
+};
+// 现在把 AuthController 关联到 LoginController
+Object.setPrototypeOf( AuthController, LoginController );
+```
+
+但简洁方法有一个非常小但是非常重要的缺点。思考下面的代码：
+```javascript
+var Foo = {
+  bar() { /*..*/ },
+  baz: function baz() { /*..*/ }
+};
+
+去掉语法糖之后的代码如下所示：
+
+var Foo = {
+  bar: function() { /*..*/ },
+  baz: function baz() { /*..*/ }
+};
+```
+由于函数本身并没有名称标识符，所以bar()的缩写形式（function()..）实际上会变成一个匿名函数表达式并赋值给 bar 属性。相比之下，具名函数表达式（function baz()..）会额外给 .baz 属性附加一个词法名称标识符 baz。如果需要自我引用的话，那最好使用传统的具名函数表达式来定义对应的函数（baz: function baz(){..}），不要使用简洁方法。
+
+内省（查找实例）
+
+```javascript
+function Foo() { /* .. */ }
+Foo.prototype...
+
+function Bar() { /* .. */ }
+Bar.prototype = Object.create( Foo.prototype );
+
+var b1 = new Bar( "b1" );
+```
+
+如果要使用 instanceof 和 .prototype 语义来检查本例中实体的关系，那必须这样做：
+
+```javascript
+// 让 Foo 和 Bar 互相关联
+Bar.prototype instanceof Foo; // true
+
+Object.getPrototypeOf( Bar.prototype ) === Foo.prototype; // true
+
+Foo.prototype.isPrototypeOf( Bar.prototype ); // true
+
+// 让 b1 关联到 Foo 和 Bar
+b1 instanceof Foo; // true
+b1 instanceof Bar; // true
+
+Object.getPrototypeOf( b1 ) === Bar.prototype; // true
+
+Foo.prototype.isPrototypeOf( b1 ); // true
+Bar.prototype.isPrototypeOf( b1 ); // true
+```
+
+还有一种常见但是可能更加脆弱的内省模式，许多开发者认为它比 instanceof 更好。这种模式被称为“鸭子类型”。
+
+```javascript
+if (a1.something) {
+  a1.something();
+}
+```
+
+ES6 的 Promise 就是典型的“鸭子类型”。出于各种各样的原因，我们需要判断一个对象引用是否是 Promise，但是判断的方法是检查对象是否有 then() 方法。换句话说，如果对象有 then() 方法，ES6 的 Promise 就会认为这个对象是“可持续”（thenable）的，因此会期望它具有 Promise 的所有标准行为。
+
+而对象关联风格代码，其内省更加简洁。我们先来回顾一下之前的 Foo/Bar/b1 对象关联例子（只包含关键代码）：
+
+```javascript
+var Foo = { /* .. */ };
+
+var Bar = Object.create( Foo );
+Bar...
+
+var b1 = Object.create( Bar );
+
+// 使用对象关联时，所有的对象都是通过 [[Prototype]] 委托互相关联，下面是内省的方法，非常简单：
+
+// 让 Foo 和 Bar 互相关联
+Foo.isPrototypeOf( Bar ); // true
+Object.getPrototypeOf( Bar ) === Foo; // true
+
+// 让 b1 关联到 Foo 和 Bar
+Foo.isPrototypeOf( b1 ); // true
+Bar.isPrototypeOf( b1 ); // true
+Object.getPrototypeOf( b1 ) === Bar; // true
+```
