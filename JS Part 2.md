@@ -1,5 +1,13 @@
 # you don't know JS 学习笔记
 
+- [you don't know JS 学习笔记](#you-dont-know-js-%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0)
+  - [第二部分 `this`和对象原型](#%e7%ac%ac%e4%ba%8c%e9%83%a8%e5%88%86-this%e5%92%8c%e5%af%b9%e8%b1%a1%e5%8e%9f%e5%9e%8b)
+    - [`this`](#this)
+    - [对象](#%e5%af%b9%e8%b1%a1)
+    - [混合对象“类”](#%e6%b7%b7%e5%90%88%e5%af%b9%e8%b1%a1%e7%b1%bb)
+    - [原型](#%e5%8e%9f%e5%9e%8b)
+    - [行为委托](#%e8%a1%8c%e4%b8%ba%e5%a7%94%e6%89%98)
+
 ## 第二部分 `this`和对象原型
 
 ### `this`
