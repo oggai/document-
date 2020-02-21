@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="uft-8">
+        <title>左右固定分布比例</title>
+        <style>
+            /* style1 */
+            /* .body {
+                height: 720px;
+                width: 720px;
+                margin: 0 auto;
+                border: solid;
+            }
+
+            .left {
+                float: left;
+                height: 100%;
+                width: 30%;
+                border: dotted;
+            }
+
+            .right {
+                height: 100%;
+                width: 70%;
+            } */
+
+            /* style2 */
+            /* .body {
+                position: relative;
+                width: 300px;
+                height: 300px;
+                margin: 0 auto;
+                border: solid;
+            }
+
+            .left {
+                position: absolute;
+                width: 30%;
+                height: 100%;
+                border: dotted;
+            }
+
+            .right {
+                margin-left: 30%;
+                height: 100%;
+            } */
+
+            /* style3 */
+            .body {
+                display: flex;
+                width: 300px;
+                height: 300px;
+                margin: 0 auto;
+                border: solid;
+            }
+
+            .left {
+                width: 30%;
+                height: 100%;
+                border: dotted;
+            }
+
+            .right {
+                width: 1;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="body">
+            <div class="left">left</div>
+            <div class="right">right</div>
+        </div>
+    </body>
+</html>
