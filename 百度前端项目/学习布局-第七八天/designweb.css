@@ -1,0 +1,121 @@
+* {
+    padding: 0px;
+    margin: 0px;
+}
+/* 头部 */
+.header {
+    width: 100%;
+    height: 90px;
+    background-color: rgb(66, 66, 66);
+}
+
+.logo {
+    display: flex;
+    width: 940px;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.logo p {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-left: 1em;
+    font-size: x-large;
+    color: white;
+}
+
+.link {
+    float: right;
+    width: auto;
+    display: flex;
+    margin-top: .5em;
+    margin-right: 0;
+    list-style: none;
+}
+
+.link a {
+    padding-right: 2em;
+    color: white;
+}
+
+/* banner部分 */
+/* 这里的特有样式部分未实现，想法是给li 2th 设置一个类，单独实现其特有样式，覆盖掉a的样式 */
+.banner {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    background-color: rgb(83, 219, 83);
+}
+
+.banner ul {
+    position: absolute;
+    display: flex;
+    right: 5%;
+    bottom: 0;
+    list-style: none;
+}
+
+.banner li {
+    display: flex;
+    border: .5px solid;
+    align-items: center;
+    justify-content: center;
+    margin: .2em;
+    padding: .2em;
+    box-sizing: border-box;
+    color: black;
+    background-color: white;
+}
+
+/* 导航部分 */
+/* home的特有样式实现同上 */
+.guide {
+    width: 100%;
+    height: 60px;
+    border-bottom: 0.5px solid gray;
+}
+
+.guide div {
+    display: flex;
+    width: 940px;
+    margin: 0 auto;
+}
+
+.guide p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    margin-top: 10px;
+    padding: .5em;
+    box-sizing: border-box;
+    border: 0.5px solid gray;
+    background-color: rgb(226, 226, 226);
+}
+
+/* 内容部分 */
+.main {
+    display: flex;
+    flex-wrap: wrap;
+    width: 940px;
+    margin: 0 auto;
+}
+
+.main p {
+    flex: 1;
+    margin: .5em;
+    padding: 60px;
+    border: .5px solid gray;
+    box-sizing: border-box;
+}
+
+/* 底部 */
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100px;
+    background-color: rgb(100, 100, 100);
+}
