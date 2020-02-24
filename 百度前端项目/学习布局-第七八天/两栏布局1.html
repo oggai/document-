@@ -4,8 +4,9 @@
         <meta charset="uft-8">
         <title>左右固定分布比例</title>
         <style>
-            /* style1 */
-            /* .body {
+            /* style1 float*/
+            /* float会脱离文档流，因此右边的文档会自动填充在右边 */
+            .body {
                 height: 720px;
                 width: 720px;
                 margin: 0 auto;
@@ -16,15 +17,16 @@
                 float: left;
                 height: 100%;
                 width: 30%;
-                border: dotted;
+                background-color: burlywood;
             }
 
             .right {
                 height: 100%;
                 width: 70%;
-            } */
+            }
 
-            /* style2 */
+            /* style2 position*/
+            /* position：absolute会漂浮在文档上面，因此会遮挡文本，文本内容要使用margin-left */
             /* .body {
                 position: relative;
                 width: 300px;
@@ -37,16 +39,17 @@
                 position: absolute;
                 width: 30%;
                 height: 100%;
-                border: dotted;
+                background-color: burlywood;
             }
 
             .right {
-                margin-left: 30%;
+                margin-left: 30%; 
                 height: 100%;
             } */
 
-            /* style3 */
-            .body {
+            /* style3 flex*/
+            /* flex是相对灵活的一种的方式，自适应宽度 */
+            /* .body {
                 display: flex;
                 width: 300px;
                 height: 300px;
@@ -57,13 +60,13 @@
             .left {
                 width: 30%;
                 height: 100%;
-                border: dotted;
+                background-color: burlywood;
             }
 
             .right {
                 width: 1;
                 height: 100%;
-            }
+            } */
         </style>
     </head>
     <body>

@@ -17,8 +17,8 @@
 }
 
 .logo p {
-    flex: 1;
     display: flex;
+    flex: 1;
     align-items: center;
     padding-left: 1em;
     font-size: x-large;
@@ -27,8 +27,8 @@
 
 .link {
     float: right;
-    width: auto;
     display: flex;
+    width: auto;
     margin-top: .5em;
     margin-right: 0;
     list-style: none;
@@ -40,7 +40,7 @@
 }
 
 /* banner部分 */
-/* 这里的特有样式部分未实现，想法是给li 2th 设置一个类，单独实现其特有样式，覆盖掉a的样式 */
+/* 这里的特有样式部分未实现，想法是给2th li 设置一个类，单独实现其特有样式，覆盖掉a的样式 */
 .banner {
     position: relative;
     width: 100%;
@@ -58,12 +58,12 @@
 
 .banner li {
     display: flex;
-    border: .5px solid;
     align-items: center;
     justify-content: center;
     margin: .2em;
     padding: .2em;
     box-sizing: border-box;
+    border: .5px solid;
     color: black;
     background-color: white;
 }

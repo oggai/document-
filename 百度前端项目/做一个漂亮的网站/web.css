@@ -1,0 +1,162 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+/* part1 */
+.part1 {
+    height: 600px;
+    margin: 0 auto;
+    background-color: rgb(197, 197, 197);
+}
+
+h1 {
+    /* margin: 0 auto; */
+    padding-top: 100px;
+    padding-bottom: 50px;
+    text-align: center;
+}
+/* 兄弟结点 */
+h1 + p {
+    width: 60%;
+    margin: 0 auto;
+    padding-bottom: 50px;
+    text-align: center;
+}
+
+.signup {
+    width: 80%;
+    height: 270px;
+    margin: 0 auto;
+    border: .5px solid white;
+}
+
+.tip {
+    text-align: center;
+    padding-top: 50px;
+    padding-bottom: 10px;
+}
+
+.tip + p {
+    text-align: center;
+    padding-bottom: 40px;
+}
+
+.signup div {
+    width:900px;
+    height: 50px;
+    margin: 0 auto;
+}
+
+.account {
+    float: left;
+    width: 300px;
+    height: 40px;
+    margin: 1em ;
+    padding-top: 1em;
+    padding-left: 1em;
+    border: .5px solid white;
+}
+
+.sign {
+    width: 100px;
+    background-color: white;
+}
+
+/* part2 */
+.part2 {
+    height: 600px;
+}
+
+/* part2的第一个child */
+.part2 > P,
+.part h1 {
+    width: 400px;
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 50px;
+    box-sizing: border-box;
+}
+
+.fouricons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    width: 1000px;
+    height: 300px;
+    margin: 0 auto;
+}
+
+.icon {
+    flex: 350px;
+}
+
+.icon img {
+    float: left;
+    padding: .5em 1em;
+}
+
+.icon h3 {
+    margin-left: 4.3em;
+}
+
+.icon p {
+    padding-top: 1em;
+    margin-left: 5em;
+}
+
+.part3 {
+    position: relative;
+    height: 800px;
+    background-color: rgb(97, 97, 97);
+}
+
+.left {
+    position: absolute;
+    width: 50%;
+    height: 800px;
+}
+
+.p1 {
+    clear: left;
+    width: 300px;
+    margin-left: 100px;
+    padding-top: 150px;
+    font-size: xx-large;
+}
+
+.p2 {
+    clear: left;
+    width: 300px;
+    margin-left: 100px;
+    padding-top: 50px;
+}
+
+.botton1,
+.botton2 {
+    float: left;
+    width: 250px;
+    height: 50px;
+    margin-top: 5em;
+    margin-left: 100px;
+    padding-top: .8em;
+    text-align: center;
+    border: 0.5px solid;
+    box-sizing: border-box;
+}
+
+.botton1 {
+    background-color: white;
+}
+
+.right {
+    position: relative;
+    padding-left: 50%;
+}
+
+.right img {
+    position: absolute;
+    top: 100px;
+    right: 0;
+}
