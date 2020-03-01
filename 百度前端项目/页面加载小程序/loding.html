@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>loding</title>
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+            }
+
+            .loading {
+                max-width: 50%;
+                line-height: 1.4;
+                font: size 1.2rem;
+                font-weight: bold;
+                text-align: center;
+            }
+
+            .loading__author {
+                font-weight: normal;
+                font-size: 0.9rem;
+                color: rgb(189, 189, 189, 1);
+                margin: 0.6rem 0 2rem 0;
+                display: block;
+            }
+
+            .loading__anim {
+                width: 35px;
+                height: 35px;
+                display: inline-block;
+                border: 5px solid rgba(189, 189, 189, 0.25);
+                border-left-color: rgba(3, 155, 229, 1);
+                border-bottom-color: rgba(3, 155, 229, 1);
+                border-radius: 50%;
+                animation: rotate 600ms infinite linear;
+                /* animation属性：把animation(即rotate)绑定到该选择器上(即loading__anim) */
+            }
+            /* 使用@keyframes规则，你可以创建动画。
+               指定的变化时发生时使用％，或关键字"from"和"to"，这是和0％到100％相同。0％是开头动画，100％是当动画完成。
+             */
+            @keyframes rotate { /* rotate为动画名称 */
+                100% {
+                    transform: rotate(1turn);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <sectoin class="loading">
+            For new sidebar colors, click your workspace name, then Preferences > Sidebar > Theme
+            <span class="loading__author"> My name is OGGAI</span>
+            <span class="loading__anim"></span>
+        </sectoin>
+    </body>
+</html>
